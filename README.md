@@ -30,7 +30,7 @@ For the curious, the full [data structure](http://sdw.ecb.int/datastructure.do?d
 
 ### Setup
 
-You first need to start the Spark shell, as documented in the instructions provided on the [Delta Lake web site](https://docs.delta.io/latest/quick-start.html#spark-scala-shell).
+You first need to start the Spark shell, as documented in the instructions provided on the [Delta Lake web site](https://docs.delta.io/latest/quick-start.html#spark-scala-shell). Make sure to start your Spark shell with a reference to the Delta lake libraries (i.e. `--packages io.delta:delta-core_2.11:0.5.0`)
 
 Once this is done, we need to import required dependencies:
 
@@ -271,4 +271,13 @@ val march2 = exrTable.toDF.
   filter($"TIME_PERIOD" === "2020-03").
   select("CURRENCY", "TIME_PERIOD", "OBS_VALUE", "OBS_STATUS")
 march2.show
+```
+
+### Sixth update: Deleting RUB
+
+Let's now mimic the handling of a request to delete data, namely all RUB data in this case. This should remove 159 data points, thereby leaving us with 318 data points in the table.
+
+```scala
+exrTable.delete("CURRENCY = 'RUB'")
+exrTable.toDF.count
 ```
