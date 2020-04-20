@@ -171,3 +171,34 @@ dfv0.count
 ```
 
 That should give us 504, i.e. what we had after the initial load.
+
+### Third update: A full replacement
+
+We will now mimic a full replacement, with a twist: All data prior to January 2007 will no longer be included (i.e. 288 data points should be removed, so we should have 474 data points instead of 762).
+
+```scala
+val df3 = spark.read.format("csv").option("header", "true").schema(schema).load("in/data.3.csv")
+val df3k = df3.withColumn("KEY",
+  concat(col("FREQ"), lit(":"),
+  col("CURRENCY"), lit(":"),
+  col("CURRENCY_DENOM"), lit(":"),
+  col("EXR_TYPE"), lit(":"),
+  col("EXR_SUFFIX"), lit(":"),
+  col("TIME_PERIOD")))
+df3k.show
+df3k.count
+```
+
+As we don't need to be particularly subtle in case of full replacement, we can overwrite the existing location and Delta Lake will take care of the rest...
+
+```scala
+df3k.write.format("delta").mode("overwrite").save("out/exr")
+exrTable.toDF.count
+```
+
+As can be seen, although the table has been "overwritten", it's still possible to get back to previous versions of the data. Let's get back the 508 observations we had after the first update...
+
+```scala
+val dfv1 = spark.read.format("delta").option("versionAsOf", 1).load("out/exr")
+dfv1.count
+```
