@@ -296,3 +296,7 @@ The recommended number of decimals should now be set to 5 for CHF but should sti
 exrTable.toDF.filter($"CURRENCY" === "CHF").show
 exrTable.toDF.filter($"CURRENCY" === "NOK").show
 ```
+
+## A note about schema evolution
+
+Schema evolve. In the example we have used so far, the sender might want to start providing comments about particular data points, and a dedicated property, OBS_COM, could be used for this purpose. Delta Lake supports this use case too and schemas can be updated explicitly (say, by a metadata-driven process updating the physical model based on changes made to the data structure) or automatically. Additional information is available on the [Databricks web site](https://docs.databricks.com/delta/delta-batch.html#update-table-schema).
