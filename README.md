@@ -202,3 +202,37 @@ As can be seen, although the table has been "overwritten", it's still possible t
 val dfv1 = spark.read.format("delta").option("versionAsOf", 1).load("out/exr")
 dfv1.count
 ```
+
+### Fourth update: Sending estimates for March
+
+The fourth update mimics an organization sending forecast data to another one (in this case, forecasts for the 3 currencies, i.e. 3 new data points). For organizations using SDMX for data exchanges (like in this example), forecasts are indicated by setting `OBS_STATUS` to code `F`. The receiver knows that values are likely to be updated. Again, this is an insert, so there is not much differences with previous examples, but, from a business perspective, it's still an interesting use case...
+
+```scala
+val df4 = spark.read.format("csv").option("header", "true").schema(schema).load("in/data.4.csv")
+val df4k = df4.withColumn("KEY",
+  concat(col("FREQ"), lit(":"),
+  col("CURRENCY"), lit(":"),
+  col("CURRENCY_DENOM"), lit(":"),
+  col("EXR_TYPE"), lit(":"),
+  col("EXR_SUFFIX"), lit(":"),
+  col("TIME_PERIOD")))
+df4k.show
+df4k.count
+
+exrTable.as("master").
+  merge(df4k.as("submission"), "master.key = submission.key").
+  whenMatched().updateAll().
+  whenNotMatched().insertAll().
+  execute()
+
+exrTable.toDF.count
+```
+
+That should give use 477 data points. You can check the March data as follows. `OBS_STATUS` should be `F` and make sure to check `OBS_CONF` too.
+
+```scala
+val march = exrTable.toDF.
+  filter($"TIME_PERIOD" === "2020-03").
+  select("CURRENCY", "TIME_PERIOD", "OBS_VALUE", "OBS_STATUS")
+march.show
+```
