@@ -300,3 +300,26 @@ exrTable.toDF.filter($"CURRENCY" === "NOK").show
 ## A note about schema evolution
 
 Schema evolve. In the example we have used so far, the sender might want to start providing comments about particular data points, and a dedicated property, OBS_COM, could be used for this purpose. Delta Lake supports this use case too and schemas can be updated explicitly (say, by a metadata-driven process updating the physical model based on changes made to the data structure) or automatically. Additional information is available on the [Databricks web site](https://docs.databricks.com/delta/delta-batch.html#update-table-schema).
+
+## Reading history
+
+We can now use the history feature to summarize all the changes made to the table.
+
+```sh
+scala> val hist = exrTable.history()
+scala> hist.select("version", "timestamp", "operation", "operationParameters").show(false)
++-------+-------------------+---------+------------------------------------------------+
+|version|timestamp          |operation|operationParameters                             |
++-------+-------------------+---------+------------------------------------------------+
+|7      |2020-04-20 14:41:36|UPDATE   |[predicate -> (CURRENCY#1157 = CHF)]            |
+|6      |2020-04-20 14:18:25|DELETE   |[predicate -> ["(`CURRENCY` = 'RUB')"]]         |
+|5      |2020-04-20 13:58:42|MERGE    |[predicate -> (master.`key` = submission.`key`)]|
+|4      |2020-04-20 13:44:34|MERGE    |[predicate -> (master.`key` = submission.`key`)]|
+|3      |2020-04-20 12:26:28|WRITE    |[mode -> Overwrite, partitionBy -> []]          |
+|2      |2020-04-20 12:11:21|MERGE    |[predicate -> (master.`key` = submission.`key`)]|
+|1      |2020-04-20 11:58:28|MERGE    |[predicate -> (master.`key` = submission.`key`)]|
+|0      |2020-04-20 10:41:26|WRITE    |[mode -> Overwrite, partitionBy -> []]          |
++-------+-------------------+---------+------------------------------------------------+
+```
+
+Using the version number or the timestamp, we can now go back to any previous state of the data or even use it to replace the current state (rollback functionality).
