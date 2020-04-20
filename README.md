@@ -281,3 +281,18 @@ Let's now mimic the handling of a request to delete data, namely all RUB data in
 exrTable.delete("CURRENCY = 'RUB'")
 exrTable.toDF.count
 ```
+
+### Seventh update: Updating an attribute used by across data points
+
+Although the data are represented as a data frame in these examples, from a business perspective, some of the attributes are "attached" at a higher level, meaning they must be the same for all data points belonging to the same collection of data points (aka time series or slice). To give an example, let's say that it is recommended to publish CHF exchange rates using 5 decimals. At the moment however, the value is set to 4. Setting the same value for all CHF data can be done as follow:
+
+```scala
+exrTable.update(col("CURRENCY") === "CHF", Map("DECIMALS" -> expr("5")))
+```
+
+The recommended number of decimals should now be set to 5 for CHF but should still be 4 for NOK.
+
+```scala
+exrTable.toDF.filter($"CURRENCY" === "CHF").show
+exrTable.toDF.filter($"CURRENCY" === "NOK").show
+```
