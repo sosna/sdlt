@@ -236,3 +236,39 @@ val march = exrTable.toDF.
   select("CURRENCY", "TIME_PERIOD", "OBS_VALUE", "OBS_STATUS")
 march.show
 ```
+
+### Fifth update: Sending final values for March
+
+So far, all the examples we had were inserts, or a delete followed by an insert (i.e. full replacement). It's now time to send the final values for March, i.e. an update to existing data points. For organizations using SDMX for data exchanges (like in this example), normal values are indicated by setting `OBS_STATUS` to code `N`.
+
+```scala
+val df5 = spark.read.format("csv").option("header", "true").schema(schema).load("in/data.5.csv")
+val df5k = df5.withColumn("KEY",
+  concat(col("FREQ"), lit(":"),
+  col("CURRENCY"), lit(":"),
+  col("CURRENCY_DENOM"), lit(":"),
+  col("EXR_TYPE"), lit(":"),
+  col("EXR_SUFFIX"), lit(":"),
+  col("TIME_PERIOD")))
+df5k.show
+df5k.count
+
+exrTable.as("master").
+  merge(df5k.as("submission"), "master.key = submission.key").
+  whenMatched().updateAll().
+  whenNotMatched().insertAll().
+  execute()
+
+exrTable.toDF.count
+```
+
+Of course, the number of data points should be the same, i.e. 477 as the input only contains updates to existing data. Also, we don't really need the `whenNotMatched` clause in this case. However, as previously mentioned, you don't always necessarily know whether the input contains new data points, updates to existing ones, or both. Keeping both `whenMatched` and `whenNotMatched` clauses allow catering for all cases.
+
+We can now check the March data and, compared with the forecast data, OBS_STATUS should now be set to `N` and `OBS_VALUE` for CHF and RUB should be different.
+
+```scala
+val march2 = exrTable.toDF.
+  filter($"TIME_PERIOD" === "2020-03").
+  select("CURRENCY", "TIME_PERIOD", "OBS_VALUE", "OBS_STATUS")
+march2.show
+```
