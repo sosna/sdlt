@@ -323,3 +323,28 @@ scala> hist.select("version", "timestamp", "operation", "operationParameters").s
 ```
 
 Using the version number or the timestamp, we can now go back to any previous state of the data or even use it to replace the current state (rollback functionality).
+
+## Table compaction
+
+A quick look below `out/exr/` will show that many small parquet files have been created by Delta Lake (more than 300 in my cases). This is quite a lot considering the data that were sent. This can be mitigated by manually compacting the data.
+
+```scala
+spark.read.
+   format("delta").
+   load("out/exr").
+   repartition(4).
+   write.
+   option("dataChange", "false").
+   format("delta").
+   mode("overwrite").
+   save("out/exr")
+```
+
+This does not yet remove the other files though. To achieve this, you need to use vacuum (and force it to act at once passing a small value to it).
+
+```scala
+sql("set spark.databricks.delta.retentionDurationCheck.enabled = false")
+exrTable.vacuum(0.00001)
+```
+
+Just make sure to set the proper retention period before running `vacuum`.
