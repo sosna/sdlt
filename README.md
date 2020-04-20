@@ -56,3 +56,44 @@ val schema = StructType(
   StructField("UNIT_MULT", StringType, false) ::
   Nil)
 ```
+
+## Initial load
+
+The first sample file (`in/data.0.csv`) represents the first load of data. The sample file contains all the data for 2 currencies (NOK and RUB) until December 2019 (**504 data points in total**). CSV files can easily be read in Spark, using something like the following:
+
+```scala
+val df0 = spark.read.format("csv").option("header", "true").schema(schema).load("in/data.0.csv")
+```
+
+We will now add a key for each data point. This is not mandatory but it will help the maintenance operations later on (i.e. merge, delete, etc.). In SDMX, the key is made up of the so-called dimensions (including the special time dimension when applicable), which, for our exchange rate data means: FREQ, CURRENCY, CURRENCY_DENOM, EXR_TYPE, EXR_SUFFIX, TIME_PERIOD. This is not a tutorial about SDMX but, in a nutshell, SDMX distinguishes between 3 types of "properties": measures (what we care about), dimensions (properties that, when combined together, allow to uniquely identify a data point) and attributes (properties that don't contribute to the identification but provide additional information). Creating the key can be done as follows (`:` is used as separator):
+
+```scala
+val df0k = df0.withColumn("KEY",
+  concat(col("FREQ"), lit(":"),
+  col("CURRENCY"), lit(":"),
+  col("CURRENCY_DENOM"), lit(":"),
+  col("EXR_TYPE"), lit(":"),
+  col("EXR_SUFFIX"), lit(":"),
+  col("TIME_PERIOD")))
+```
+
+We can then peak into the data with commands like:
+
+```scala
+df0k.show
+df0k.count
+```
+
+As this is the initial load, we don't have any delta lake table yet. We can create one using:
+
+```scala
+df0k.write.format("delta").mode("overwrite").save("out/exr/")
+```
+
+As can be noticed, this is standard Spark code. The only delta lake-related information being the choice of format. Now, just to be on the safe side, let's check that we stored what we expected.
+
+```scala
+val check = spark.read.format("delta"). load("out/exr")
+check.show
+check.count
+```
