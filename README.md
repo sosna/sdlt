@@ -135,3 +135,39 @@ As can be seen, the check is on the `key` property. Of course, we could have che
 ```scala
 exrTable.toDF.count
 ```
+
+### Second update: Adding data for CHF
+
+We will now add CHF data until February 2020 (254 new data points). Technically, this is not different from the first update. However, for statisticians, this represents an extension of the coverage (aka reporting universe), instead of a normal append of new data to existing time series and, therefore, is treated separately. The code below should by now look familiar:
+
+```scala
+val df2 = spark.read.format("csv").option("header", "true").schema(schema).load("in/data.2.csv")
+val df2k = df2.withColumn("KEY",
+  concat(col("FREQ"), lit(":"),
+  col("CURRENCY"), lit(":"),
+  col("CURRENCY_DENOM"), lit(":"),
+  col("EXR_TYPE"), lit(":"),
+  col("EXR_SUFFIX"), lit(":"),
+  col("TIME_PERIOD")))
+df2k.show(false)
+df2k.count
+exrTable.as("master").
+  merge(df2k.as("submission"), "master.key = submission.key").
+  whenMatched().updateAll().
+  whenNotMatched().insertAll().
+  execute()
+exrTable.toDF.count
+```
+
+The latest should return 762.
+
+### Intermezzo: Travelling back in time
+
+As mentioned in the beginning, one of the features of Delta Lake, is that it gives you the possibility to travel back in time. We can do this either by supplying the number of the version we are interested in (i.e. 0 for the first version ever) or a timestamp. Let's use a version number...
+
+```scala
+val dfv0 = spark.read.format("delta").option("versionAsOf", 0).load("out/exr")
+dfv0.count
+```
+
+That should give us 504, i.e. what we had after the initial load.
