@@ -1,6 +1,6 @@
 # Tutorial: Storing statistical data using Delta Lake
 
-The purpose of this project is to show how statistical data can be managed using [Delta Lake](https://delta.io).
+The purpose of this repo is to show how statistical data can be managed using [Delta Lake](https://delta.io).
 
 ## Overview
 
@@ -22,7 +22,9 @@ You need a Spark Scala shell to run the examples below. Follow the instructions 
 
 The sample data are based on a simplified version of the exchange rates data offered by the European Central Bank (ECB). All ECB data can be retrieved using their [REST API](https://sdw-wsrest.ecb.europa.eu). The queries used will be provided with each use case described in the next section. 
 
-The data has been simplified by removing unused or uninteresting attributes. This has been done to help focusing on the essential, instead of obscuring the screen with unused or uninteresting information. For the curious, the full [data structure](http://sdw.ecb.int/datastructure.do?datasetinstanceid=120) can be seen on the ECB website. The properties that have been kept in the sample files are: FREQ, CURRENCY, CURRENCY_DENOM, EXR_TYPE, EXR_SUFFIX, TIME_PERIOD, OBS_VALUE, OBS_STATUS, COLLECTION, UNIT, UNIT_MULT and DECIMALS.
+The data has been simplified by removing unused or uninteresting attributes. This has been done to help focusing on the essential, instead of obscuring the screen with unused or uninteresting information. 
+
+For the curious, the full [data structure](http://sdw.ecb.int/datastructure.do?datasetinstanceid=120) can be seen on the ECB website. The properties that have been kept in the sample files are: FREQ, CURRENCY, CURRENCY_DENOM, EXR_TYPE, EXR_SUFFIX, TIME_PERIOD, OBS_VALUE, OBS_STATUS, COLLECTION, UNIT, UNIT_MULT and DECIMALS.
 
 ## Choreography
 
@@ -96,4 +98,40 @@ As can be noticed, this is standard Spark code. The only delta lake-related info
 val check = spark.read.format("delta"). load("out/exr")
 check.show
 check.count
+```
+
+### First update: Adding data for January and February 2020
+
+It's now time to add our first update, namely data for January and February 2020 (i.e. 4 new observations). As before, we add a key to the data and perform a quick check.
+
+```scala
+val df1 = spark.read.format("csv").option("header", "true").schema(schema).load("in/data.1.csv")
+val df1k = df1.withColumn("KEY",
+  concat(col("FREQ"), lit(":"),
+  col("CURRENCY"), lit(":"),
+  col("CURRENCY_DENOM"), lit(":"),
+  col("EXR_TYPE"), lit(":"),
+  col("EXR_SUFFIX"), lit(":"),
+  col("TIME_PERIOD")))
+df1k.show(false)
+df1k.count
+```
+
+This time, we use `show(false)`, to avoid truncating values when displaying them.
+
+We should now merge the data. Of course, we know that the file only contains new data points. But typically, you don't know whether the data you receive doesn't also contain updates to existing data, so we'll use the `merge` function, along with both a `whenMatched` and a `whenNotMatched` clauses.
+
+```scala
+val exrTable = DeltaTable.forPath(spark, "out/exr/")
+exrTable.as("master").
+  merge(df1k.as("submission"), "master.key = submission.key").
+  whenMatched().updateAll().
+  whenNotMatched().insertAll().
+  execute()
+```
+
+As can be seen, the check is on the `key` property. Of course, we could have checked each dimension individually instead, but using the key makes things more readable... Let's now check the results. The table should contain **508 observations**.
+
+```scala
+exrTable.toDF.count
 ```
