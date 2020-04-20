@@ -25,3 +25,34 @@ The sample data are based on a simplified version of the exchange rates data off
 The data has been simplified by removing unused or uninteresting attributes. This has been done to help focusing on the essential, instead of obscuring the screen with unused or uninteresting information. For the curious, the full [data structure](http://sdw.ecb.int/datastructure.do?datasetinstanceid=120) can be seen on the ECB website. The properties that have been kept in the sample files are: FREQ, CURRENCY, CURRENCY_DENOM, EXR_TYPE, EXR_SUFFIX, TIME_PERIOD, OBS_VALUE, OBS_STATUS, COLLECTION, UNIT, UNIT_MULT and DECIMALS.
 
 ## Choreography
+
+### Setup
+
+You first need to start the Spark shell, as documented in the instructions provided on the [Delta Lake web site](https://docs.delta.io/latest/quick-start.html#spark-scala-shell).
+
+Once this is done, we need to import required dependencies:
+
+```scala
+import org.apache.spark.sql.types.{StructType, StructField, StringType, IntegerType, DoubleType}
+import io.delta.tables._
+```
+
+We can then create a schema for our data. This step is optional and, if you have metadata-driven processes, this would typically be generated automatically out of your metadata:
+
+```scala
+val schema = StructType(
+  StructField("FREQ", StringType, false) ::
+  StructField("CURRENCY", StringType, false) ::
+  StructField("CURRENCY_DENOM", StringType, false) ::
+  StructField("EXR_TYPE", StringType, false) ::
+  StructField("EXR_SUFFIX", StringType, false) ::
+  StructField("TIME_PERIOD", StringType, false) ::
+  StructField("OBS_VALUE", DoubleType, false) ::
+  StructField("OBS_STATUS", StringType, false) ::
+  StructField("COLLECTION", StringType, false) ::
+  StructField("DECIMALS", IntegerType, false) ::
+  StructField("TITLE", StringType, false) ::
+  StructField("UNIT", StringType, false) ::
+  StructField("UNIT_MULT", StringType, false) ::
+  Nil)
+```
