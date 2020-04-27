@@ -335,7 +335,7 @@ The number of files being created can be tweaked using properties such as `spark
 
 Additional information is available in the [Performance Tuning section](https://docs.delta.io/latest/delta-update.html#performance-tuning) of the Delta Lake documentation.
 
-Once, in a while, it is also considered good practice to manually compact the table.
+Once in a while, it is also considered good practice to manually compact the table.
 
 ```scala
 spark.read.
