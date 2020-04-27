@@ -326,7 +326,14 @@ Using the version number or the timestamp, we can now go back to any previous st
 
 ## Table compaction
 
-A quick look below `out/exr/` will show that many small parquet files have been created by Delta Lake (more than 300 in my cases). This is quite a lot considering the data that were sent. This can be mitigated by manually compacting the data.
+A quick look below `out/exr/` will show that many small parquet files have been created by Delta Lake (more than 300 in my cases). This is quite a lot considering the data that were sent.
+
+The number of files being created can be tweaked using properties such as `spark.delta.merge.repartitionBeforeWrite` and `spark.sql.shuffle.partitions`:
+
+- The default value for `spark.sql.shuffle.partitions` is 200. For smaller data, this is too high, while for large data it can be too small. The logic depends on the data but, usually, a value up to twice the number of partitions is a good starting point.
+- In addition, repartitioning the data before writing it to disk will help mitigating the issue of the many small files mentioned above.
+
+Once, in a while, it is also considered good practice to manually compact the table.
 
 ```scala
 spark.read.
@@ -340,11 +347,4 @@ spark.read.
    save("out/exr")
 ```
 
-This does not yet remove the other files though. To achieve this, you need to use vacuum (and force it to act at once passing a small value to it).
-
-```scala
-sql("set spark.databricks.delta.retentionDurationCheck.enabled = false")
-exrTable.vacuum(0.00001)
-```
-
-Just make sure to set the proper retention period before running `vacuum`.
+This does not yet remove the other files though. To achieve this, you need to use the [vacuum utility function](https://docs.delta.io/latest/delta-utility.html#vacuum).
