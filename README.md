@@ -203,7 +203,7 @@ val dfv1 = spark.read.format("delta").option("versionAsOf", 1).load("out/exr")
 dfv1.count
 ```
 
-### Fourth update: Sending estimates for March
+### Fourth update: Sending forecast for March
 
 The fourth update mimics an organization sending forecast data to another one (in this case, forecasts for the 3 currencies, i.e. 3 new data points). For organizations using SDMX for data exchanges (like in this example), forecasts are indicated by setting `OBS_STATUS` to code `F`. The receiver knows that values are likely to be updated. Again, this is an insert, so there is not much differences with previous examples, but, from a business perspective, it's still an interesting use case...
 
@@ -287,7 +287,7 @@ exrTable.toDF.count
 Although the data are represented as a data frame in these examples, from a business perspective, some of the attributes are "attached" at a higher level, meaning they must be the same for all data points belonging to the same collection of data points (aka time series or slice). To give an example, let's say that it is recommended to publish CHF exchange rates using 5 decimals. At the moment however, the value is set to 4. Setting the same value for all CHF data can be done as follow:
 
 ```scala
-exrTable.update(col("CURRENCY") === "CHF", Map("DECIMALS" -> expr("5")))
+exrTable.update(col("CURRENCY") === "CHF", Map("DECIMALS" -> lit(5)))
 ```
 
 The recommended number of decimals should now be set to 5 for CHF but should still be 4 for NOK.
