@@ -333,6 +333,8 @@ The number of files being created can be tweaked using properties such as `spark
 - The default value for `spark.sql.shuffle.partitions` is 200. For smaller data, this is too high, while for large data it can be too small. The logic depends on the data but, usually, a value up to twice the number of partitions is a good starting point.
 - In addition, repartitioning the data before writing it to disk will help mitigating the issue of the many small files mentioned above.
 
+Additional information is available in the [Performance Tuning section](https://docs.delta.io/latest/delta-update.html#performance-tuning) of the Delta Lake documentation.
+
 Once, in a while, it is also considered good practice to manually compact the table.
 
 ```scala
