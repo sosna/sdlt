@@ -95,7 +95,7 @@ df0k.write.format("delta").mode("overwrite").save("out/exr/")
 As can be noticed, this is standard Spark code. The only delta lake-related information being the choice of format. Now, just to be on the safe side, let's check that we stored what we expected.
 
 ```scala
-val check = spark.read.format("delta"). load("out/exr")
+val check = spark.read.format("delta").load("out/exr")
 check.show
 check.count
 ```
