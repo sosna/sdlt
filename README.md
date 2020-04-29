@@ -61,7 +61,7 @@ val schema = StructType(
 
 ## Initial load
 
-The first sample file (`in/data.0.csv`) represents the first load of data. The sample file contains all the data for 2 currencies (NOK and RUB) until December 2019 (**504 data points in total**). CSV files can easily be read in Spark, using something like the following:
+The first sample file (`in/data.0.csv`) represents the first load of data. The sample file contains all the monthly data for 2 currencies (NOK and RUB) until December 2019 (**504 data points in total**). CSV files can easily be read in Spark, using something like the following:
 
 ```scala
 val df0 = spark.read.format("csv").option("header", "true").schema(schema).load("in/data.0.csv")
