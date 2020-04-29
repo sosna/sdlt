@@ -1,4 +1,4 @@
-# Tutorial: Storing statistical data using Delta Lake
+# Storing statistical data using Delta Lake
 
 The purpose of this repo is to show how statistical data can be managed using [Delta Lake](https://delta.io).
 
