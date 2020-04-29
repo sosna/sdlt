@@ -20,9 +20,9 @@ You need a Spark Scala shell to run the examples below. Follow the instructions 
 
 ## Sample Data
 
-The sample data are based on a simplified version of the exchange rates data offered by the European Central Bank (ECB). All ECB data can be retrieved using their [REST API](https://sdw-wsrest.ecb.europa.eu). The queries used will be provided with each use case described in the next section. 
+The sample data are based on a simplified version of some of the exchange rates data published by the European Central Bank (ECB). All ECB data can be retrieved using their [REST API](https://sdw-wsrest.ecb.europa.eu).
 
-The data has been simplified by removing unused or uninteresting attributes. This has been done to help focusing on the essential, instead of obscuring the screen with unused or uninteresting information. 
+The data has been simplified by removing unused or uninteresting attributes (uninteresting for the purpose of this demo, that is :)). This has been done to help focusing on the essential, instead of obscuring the screen with unused or uninteresting information. 
 
 For the curious, the full [data structure](http://sdw.ecb.int/datastructure.do?datasetinstanceid=120) can be seen on the ECB website. The properties that have been kept in the sample files are: FREQ, CURRENCY, CURRENCY_DENOM, EXR_TYPE, EXR_SUFFIX, TIME_PERIOD, OBS_VALUE, OBS_STATUS, COLLECTION, UNIT, UNIT_MULT and DECIMALS.
 
