@@ -228,7 +228,7 @@ exrTable.as("master").
 exrTable.toDF.count
 ```
 
-That should give use 477 data points. You can check the March data as follows. `OBS_STATUS` should be `F` and make sure to check `OBS_CONF` too.
+That should give use 477 data points. You can check the March data as follows. `OBS_STATUS` should be `F` and make sure to check `OBS_VALUE` too.
 
 ```scala
 val march = exrTable.toDF.
