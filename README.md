@@ -1,4 +1,4 @@
-# Tutorial: Storing statistical data using Delta Lake
+# Storing statistical data using Delta Lake
 
 The purpose of this repo is to show how statistical data can be managed using [Delta Lake](https://delta.io).
 
@@ -20,9 +20,9 @@ You need a Spark Scala shell to run the examples below. Follow the instructions 
 
 ## Sample Data
 
-The sample data are based on a simplified version of the exchange rates data offered by the European Central Bank (ECB). All ECB data can be retrieved using their [REST API](https://sdw-wsrest.ecb.europa.eu). The queries used will be provided with each use case described in the next section. 
+The sample data are based on a simplified version of some of the exchange rates data published by the European Central Bank (ECB). All ECB data can be retrieved using their [REST API](https://sdw-wsrest.ecb.europa.eu).
 
-The data has been simplified by removing unused or uninteresting attributes. This has been done to help focusing on the essential, instead of obscuring the screen with unused or uninteresting information. 
+The data has been simplified by removing unused or uninteresting attributes (uninteresting for the purpose of this demo, that is :)). This has been done to help focusing on the essential, instead of obscuring the screen with unused or uninteresting information. 
 
 For the curious, the full [data structure](http://sdw.ecb.int/datastructure.do?datasetinstanceid=120) can be seen on the ECB website. The properties that have been kept in the sample files are: FREQ, CURRENCY, CURRENCY_DENOM, EXR_TYPE, EXR_SUFFIX, TIME_PERIOD, OBS_VALUE, OBS_STATUS, COLLECTION, UNIT, UNIT_MULT and DECIMALS.
 
@@ -61,7 +61,7 @@ val schema = StructType(
 
 ## Initial load
 
-The first sample file (`in/data.0.csv`) represents the first load of data. The sample file contains all the data for 2 currencies (NOK and RUB) until December 2019 (**504 data points in total**). CSV files can easily be read in Spark, using something like the following:
+The first sample file (`in/data.0.csv`) represents the first load of data. The sample file contains all the monthly data for 2 currencies (NOK and RUB) until December 2019 (**504 data points in total**). CSV files can easily be read in Spark, using something like the following:
 
 ```scala
 val df0 = spark.read.format("csv").option("header", "true").schema(schema).load("in/data.0.csv")
@@ -95,7 +95,7 @@ df0k.write.format("delta").mode("overwrite").save("out/exr/")
 As can be noticed, this is standard Spark code. The only delta lake-related information being the choice of format. Now, just to be on the safe side, let's check that we stored what we expected.
 
 ```scala
-val check = spark.read.format("delta"). load("out/exr")
+val check = spark.read.format("delta").load("out/exr")
 check.show
 check.count
 ```
@@ -228,7 +228,7 @@ exrTable.as("master").
 exrTable.toDF.count
 ```
 
-That should give use 477 data points. You can check the March data as follows. `OBS_STATUS` should be `F` and make sure to check `OBS_CONF` too.
+That should give use 477 data points. You can check the March data as follows. `OBS_STATUS` should be `F` and make sure to check `OBS_VALUE` too.
 
 ```scala
 val march = exrTable.toDF.
