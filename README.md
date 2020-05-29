@@ -30,7 +30,7 @@ For the curious, the full [data structure](http://sdw.ecb.int/datastructure.do?d
 
 ### Setup
 
-You first need to start the Spark shell, as documented in the instructions provided on the [Delta Lake web site](https://docs.delta.io/latest/quick-start.html#spark-scala-shell). Make sure to start your Spark shell with a reference to the Delta lake libraries (i.e. `--packages io.delta:delta-core_2.11:0.5.0`)
+You first need to start the Spark shell, as documented in the instructions provided on the [Delta Lake web site](https://docs.delta.io/latest/quick-start.html#spark-scala-shell). Make sure to start your Spark shell with a reference to the Delta lake libraries (i.e. `--packages io.delta:delta-core_2.11:0.6.1`)
 
 Once this is done, we need to import required dependencies:
 
@@ -297,10 +297,6 @@ exrTable.toDF.filter($"CURRENCY" === "CHF").show
 exrTable.toDF.filter($"CURRENCY" === "NOK").show
 ```
 
-## A note about schema evolution
-
-Schema evolve. In the example we have used so far, the sender might want to start providing comments about particular data points, and a dedicated property, OBS_COM, could be used for this purpose. Delta Lake supports this use case too and schemas can be updated explicitly (say, by a metadata-driven process updating the physical model based on changes made to the data structure) or automatically. Additional information is available on the [Databricks web site](https://docs.databricks.com/delta/delta-batch.html#update-table-schema).
-
 ## Reading history
 
 We can now use the history feature to summarize all the changes made to the table.
@@ -323,6 +319,73 @@ scala> hist.select("version", "timestamp", "operation", "operationParameters").s
 ```
 
 Using the version number or the timestamp, we can now go back to any previous state of the data or even use it to replace the current state (rollback functionality).
+
+## A note about schema evolution
+
+Schema evolve. In the example we have used so far, the sender might want to start providing comments about particular data points, and a dedicated property, OBS_COM, could be used for this purpose.
+
+By default, Delta Lake will report an error in case the schema changes. But you can turn on schema evolution using the following:
+
+```scala
+spark.conf.set("spark.databricks.delta.schema.autoMerge.enabled", true)
+```
+
+Let's now create a new schema, with the new property.
+
+```scala
+val schema2 = StructType(
+  StructField("FREQ", StringType, false) ::
+  StructField("CURRENCY", StringType, false) ::
+  StructField("CURRENCY_DENOM", StringType, false) ::
+  StructField("EXR_TYPE", StringType, false) ::
+  StructField("EXR_SUFFIX", StringType, false) ::
+  StructField("TIME_PERIOD", StringType, false) ::
+  StructField("OBS_VALUE", DoubleType, false) ::
+  StructField("OBS_STATUS", StringType, false) ::
+  StructField("OBS_COM", StringType, false) ::
+  StructField("COLLECTION", StringType, false) ::
+  StructField("DECIMALS", IntegerType, false) ::
+  StructField("TITLE", StringType, false) ::
+  StructField("UNIT", StringType, false) ::
+  StructField("UNIT_MULT", StringType, false) ::
+  Nil)
+```
+
+And let's use it the read the new data.
+
+```scala
+val df6 = spark.read.format("csv").option("header", "true").schema(schema2).load("in/data.6.csv")
+val df6k = df6.withColumn("KEY",
+  concat(col("FREQ"), lit(":"),
+  col("CURRENCY"), lit(":"),
+  col("CURRENCY_DENOM"), lit(":"),
+  col("EXR_TYPE"), lit(":"),
+  col("EXR_SUFFIX"), lit(":"),
+  col("TIME_PERIOD")))
+df6k.show
+df6k.count
+```
+
+As can be seen, there is now a comment about one data point. Let's now update the table...
+
+```scala
+exrTable.as("master").
+  merge(df6k.as("submission"), "master.key = submission.key").
+  whenMatched().updateAll().
+  whenNotMatched().insertAll().
+  execute()
+```
+
+The operation should succeed. Let's see what the comment was:
+
+```scala
+val comment = exrTable.toDF.
+  filter($"TIME_PERIOD" === "2020-03" && $"CURRENCY" === "CHF").
+  select("CURRENCY", "TIME_PERIOD", "OBS_VALUE", "OBS_STATUS", "OBS_COM")
+comment.show
+```
+
+That's all it took to change the table schema :-).
 
 ## Table compaction
 
