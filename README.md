@@ -24,7 +24,7 @@ The sample data are based on a simplified version of some of the exchange rates 
 
 The data has been simplified by removing unused or uninteresting attributes (uninteresting for the purpose of this demo, that is :)). This has been done to help focusing on the essential, instead of obscuring the screen with unused or uninteresting information. 
 
-For the curious, the full [data structure](http://sdw.ecb.int/datastructure.do?datasetinstanceid=120) can be seen on the ECB website. The properties that have been kept in the sample files are: FREQ, CURRENCY, CURRENCY_DENOM, EXR_TYPE, EXR_SUFFIX, TIME_PERIOD, OBS_VALUE, OBS_STATUS, COLLECTION, UNIT, UNIT_MULT and DECIMALS.
+For the curious, the full [data structure](https://sdw.ecb.europa.eu/datastructure.do?datasetinstanceid=120) can be seen on the ECB website. The properties that have been kept in the sample files are: FREQ, CURRENCY, CURRENCY_DENOM, EXR_TYPE, EXR_SUFFIX, TIME_PERIOD, OBS_VALUE, OBS_STATUS, COLLECTION, UNIT, UNIT_MULT and DECIMALS.
 
 ## Choreography
 
